@@ -16,8 +16,10 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { authClient } from "@/lib/auth-client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
+import z from "zod";
 
 export default function SignUpPage() {
   const form = useForm({
@@ -28,6 +30,14 @@ export default function SignUpPage() {
       password: "",
     },
   });
+
+  async function onSubmit(data: z.infer<typeof signUpSchema>) {
+    await authClient.signUp.email({
+      email: data.email,
+      name: data.name,
+      password: data.password,
+    });
+  }
   return (
     <Card>
       <CardHeader>
@@ -35,7 +45,8 @@ export default function SignUpPage() {
         <CardDescription>Create an account to get started</CardDescription>
       </CardHeader>
       <CardContent>
-        <form>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
+          {/* form.handleSubmit uses RHF to validate early. data that reaches onSubmit is validated */}
           <FieldGroup className="gap-y-4">
             <Controller
               name="name"
