@@ -1,5 +1,6 @@
 "use client";
 
+import { createBlogAction } from "@/app/actions";
 import { postSchema } from "@/app/schemas/blog";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,9 +18,7 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { api } from "@/convex/_generated/api";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "convex/react";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/router";
 import { useTransition } from "react";
@@ -30,7 +29,6 @@ import z from "zod";
 export default function CreateRoute() {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const mutation = useMutation(api.posts.createPost);
   const form = useForm({
     resolver: zodResolver(postSchema),
     defaultValues: {
@@ -40,12 +38,8 @@ export default function CreateRoute() {
   });
 
   function onSubmit(values: z.infer<typeof postSchema>) {
-    startTransition(() => {
-      mutation({
-        body: values.content,
-        title: values.title,
-      });
-      // shouldn't we check the status of the mutation before calling the toast?
+    startTransition(async () => {
+      await createBlogAction(values);
       toast.success("Posted successfully!");
       router.push("/");
     });
