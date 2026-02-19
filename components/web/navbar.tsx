@@ -19,7 +19,7 @@ export function Navbar({}: Props) {
       <div className="flex items-center gap-8">
         <Link href="/">
           <h1 className="text-3xl font-bold">
-            Next<span className="text-blue-500">Blog</span>
+            Next<span className="text-primary">Blog</span>
           </h1>
         </Link>
 
