@@ -6,25 +6,54 @@ import { fetchMutation } from "convex/nextjs";
 import { api } from "@/convex/_generated/api";
 import { redirect } from "next/navigation";
 import { getToken } from "@/lib/auth-server";
+import { revalidatePath } from "next/cache";
 
 export async function createBlogAction(values: z.infer<typeof postSchema>) {
-  const parsed = postSchema.safeParse(values);
+  try {
+    const parsed = postSchema.safeParse(values);
 
-  if (!parsed.success) {
-    throw new Error(parsed.error.message);
+    if (!parsed.success) {
+      throw new Error(parsed.error.message);
+    }
+    // Is it a good idea to throw from an action? will it properly render after build?
+
+    const token = await getToken();
+    const imageUrl = await fetchMutation(
+      api.posts.generateImageUploadUrl,
+      {},
+      { token },
+    );
+
+    const uploadResult = await fetch(imageUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": parsed.data.image.type,
+      },
+      body: parsed.data.image,
+    });
+
+    if (!uploadResult.ok) {
+      return {
+        error: "Failed to upload image",
+      };
+    }
+    const { storageId } = await uploadResult.json();
+
+    await fetchMutation(
+      api.posts.createPost,
+      {
+        body: parsed.data.content,
+        title: parsed.data.title,
+        imageStorageId: storageId,
+      },
+      { token },
+    );
+  } catch {
+    return {
+      error: "Failed to create post",
+    };
   }
-  // Is it a good idea to throw from an action? will it properly render after build?
 
-  const token = await getToken();
-
-  await fetchMutation(
-    api.posts.createPost,
-    {
-      body: parsed.data.content,
-      title: parsed.data.title,
-    },
-    { token },
-  );
-
-  return redirect("/");
+  revalidatePath("/blog");
+  return redirect("/"); // can't have this inside a try block when redirecting in an action
 }

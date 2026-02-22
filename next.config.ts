@@ -9,6 +9,11 @@ const nextConfig: NextConfig = {
         protocol: "https",
         port: "",
       },
+      {
+        hostname: "enchanted-pony-846.convex.cloud",
+        protocol: "https",
+        port: "",
+      },
     ],
   },
 };
