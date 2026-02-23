@@ -88,6 +88,7 @@ export default function SignUpPage() {
                   <Field>
                     <FieldLabel>Email</FieldLabel>
                     <Input
+                      aria-invalid={fieldState.invalid}
                       placeholder="john@example.com"
                       {...field}
                       type="email"
