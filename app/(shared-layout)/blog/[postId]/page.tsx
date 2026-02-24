@@ -5,6 +5,7 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { fetchQuery, preloadQuery } from "convex/nextjs";
 import { ArrowLeft } from "lucide-react";
+import { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -14,15 +15,33 @@ interface PostIdRouteProps {
   }>;
 }
 
+export async function generateMetadata({
+  params,
+}: PostIdRouteProps): Promise<Metadata> {
+  const { postId } = await params;
+  const post = await fetchQuery(api.posts.getPostById, { postId: postId });
+
+  if (!post) {
+    return {
+      title: "Post not found",
+    };
+  }
+
+  return {
+    title: post.title,
+    description: post.body,
+  }
+}
+
 export default async function PostIdRoute({ params }: PostIdRouteProps) {
   const { postId } = await params;
-  const post = await fetchQuery(api.posts.getPostById, { postId });
-  const preloadedComments = await preloadQuery(
-    api.comments.getCommentsByPostId,
-    {
+
+  const [post, preloadedComments] = await Promise.all([
+    await fetchQuery(api.posts.getPostById, { postId }),
+    await preloadQuery(api.comments.getCommentsByPostId, {
       postId: postId,
-    },
-  );
+    }),
+  ]);
 
   if (!post) {
     return (
