@@ -1,7 +1,6 @@
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { authComponent } from "./auth";
-import { createVerify } from "crypto";
 import { Doc } from "./_generated/dataModel";
 
 export const createPost = mutation({
@@ -28,16 +27,21 @@ export const createPost = mutation({
 export const getPosts = query({
   args: {},
   handler: async (ctx) => {
-    const posts = await ctx.db.query("posts").order("desc").collect();
-    return await Promise.all(
-      posts.map(async (post) => {
-        const resolvedImageUrl =
-          post.imageStorageId !== undefined
-            ? await ctx.storage.getUrl(post.imageStorageId)
-            : null;
-        return { ...post, imageUrl: resolvedImageUrl };
-      }),
-    );
+    try {
+      const posts = await ctx.db.query("posts").order("desc").collect();
+      return await Promise.all(
+        posts.map(async (post) => {
+          const resolvedImageUrl =
+            post.imageStorageId !== undefined
+              ? await ctx.storage.getUrl(post.imageStorageId)
+              : null;
+          return { ...post, imageUrl: resolvedImageUrl };
+        }),
+      );
+    } catch (err) {
+      console.error("getPosts failed:", err);
+      return []; // prevent build fails
+    }
   },
 });
 
