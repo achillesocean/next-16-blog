@@ -11,7 +11,7 @@ const nextConfig: NextConfig = {
         port: "",
       },
       {
-        hostname: "enchanted-pony-846.convex.cloud",
+        hostname: "sleek-kangaroo-768.convex.cloud",
         protocol: "https",
         port: "",
       },
